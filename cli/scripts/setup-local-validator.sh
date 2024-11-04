@@ -19,3 +19,13 @@ else
 fi
 
 
+# Path to the keypair file
+KEYPAIR_PATH="$HOME/.config/solana/id.json"  # Change this to your actual keypair path if different
+
+# Check if the keypair file exists
+if [ -f "$KEYPAIR_PATH" ]; then
+    echo "Keypair file exists at: $KEYPAIR_PATH"
+else
+    echo "Keypair file does not exist at: $KEYPAIR_PATH"
+    exit 1
+fi
