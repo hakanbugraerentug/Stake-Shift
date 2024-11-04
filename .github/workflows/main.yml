@@ -16,11 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18' # Specify the Node.js version you want to use
-
       - name: Check solana-cli version
         run: |
           if solana --version | grep -q "solana-cli 1.18"; then
