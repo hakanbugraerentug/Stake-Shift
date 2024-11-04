@@ -1,0 +1,54 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18' # Specify the Node.js version you want to use
+
+      - name: Check solana-cli version
+        run: |
+          if solana --version | grep -q "solana-cli 1.18"; then
+            echo "solana-cli version is 1.18"
+          else
+            echo "Error: solana-cli version is not 1.18"
+            exit 1
+          fi
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
+
+      - name: Build Solana program
+        run: |
+          cd program
+          cargo build-bpf --manifest-path=Cargo.toml
+
+      - name: Run Unit Tests
+        run: |
+          cd program
+          cargo test
+          cd ../js
+          npm test # Ensure you have unit tests configured in your package.json
