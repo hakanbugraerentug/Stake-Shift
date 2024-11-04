@@ -16,6 +16,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
+
       - name: Check solana-cli version
         run: |
           if solana --version | grep -q "solana-cli 1.18"; then
@@ -31,10 +35,6 @@ jobs:
           toolchain: stable
           override: true
           components: rustfmt
-
-      - name: Install Solana CLI
-        run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
 
       - name: Build Solana program
         run: |
