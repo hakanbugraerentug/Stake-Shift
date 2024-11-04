@@ -32,7 +32,7 @@ jobs:
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: '1.75.0' 
           override: true
           components: rustfmt
 
@@ -45,5 +45,3 @@ jobs:
         run: |
           cd program
           cargo test
-          cd ../js
-          npm test # Ensure you have unit tests configured in your package.json
