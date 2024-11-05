@@ -1,3 +1,3 @@
-# StakeSea
+# StakeShift
 
 First Commit
