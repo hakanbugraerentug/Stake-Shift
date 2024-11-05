@@ -35,7 +35,15 @@ jobs:
           toolchain: '1.75.0' 
           override: true
           components: rustfmt
+          
+      - name: Clear Cargo Cache
+        run: |
+          cargo cache -a # Ensures all old dependencies are removed
 
+      - name: Build Solana program
+        run: |
+          cd program
+          cargo build-bpf --manifest-path=Cargo.toml
       - name: Build Solana program
         run: |
           cd program
