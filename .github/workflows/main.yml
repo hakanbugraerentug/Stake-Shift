@@ -29,12 +29,24 @@ jobs:
             echo "::warning::Warning: $SOLANA_VERSION is not 1.18. Please ensure you are using the correct version."
           fi
 
-      - name: Set up Rust
+      - name: Set up Rust 1.75.0
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: '1.78.0' 
+          toolchain: '1.75.0'
           override: true
           components: rustfmt
+
+      - name: Verify Rust Version
+        run: |
+          REQUIRED_RUST_VERSION="1.75.0"
+          INSTALLED_RUST_VERSION=$(rustc --version | awk '{print $2}')
+          if [[ "$INSTALLED_RUST_VERSION" < "$REQUIRED_RUST_VERSION" ]]; then
+            echo "Rust version is below required 1.75.0; updating to 1.75.0"
+            rustup install 1.75.0
+            rustup default 1.75.0
+          else
+            echo "Rust version is up-to-date: $INSTALLED_RUST_VERSION"
+          fi
           
       - name: Build Solana program
         run: |
