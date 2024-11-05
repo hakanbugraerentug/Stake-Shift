@@ -1,4 +1,4 @@
-@startuml
+@startuml Component Diagram
 package "On-Chain Component" {
     class "Solana Program (Bookkeeping System)" {
         +initialize_stake(user: Pubkey, amount: u64): ProgramResult
