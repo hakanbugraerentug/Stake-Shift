@@ -1,0 +1,1 @@
+![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.https://github.com/hakanbugraerentug/Stake-Shift/resources/Diagrams/ComponentDiagram.puml)

@@ -1,0 +1,56 @@
+@startuml
+package "On-Chain Component" {
+    class "Solana Program (Bookkeeping System)" {
+        +initialize_stake(user: Pubkey, amount: u64): ProgramResult
+        --
+        //Update those accounts whos stakes should be shifted and send to Off-Chain Scheduler
+        +update_user_states(user: Pubkey): ProgramResult
+        --
+        // Methods for actual Stake shifting are called only after the Matching trainsactions is performed by Off-Chain Scheduler
+        +shift_stake(user: Pubkey, amount: u64): ProgramResult
+        -split_stake(user: Pubkey, amount: u64): ProgramResult
+        -withdraw_stake(user: Pubkey, amount: u64): ProgramResult
+        -deactivate_stake(user: Pubkey): ProgramResult
+
+        -user_states: UserState[] 
+    }
+
+    class "UserState" {
+        +user: Pubkey
+        +is_active: bool
+        +stakes: Vector<[validatorPubkey: Pubkey, stakedAmount: u64]>
+        +estimatedRewards: u64
+    }
+}
+
+package "Off-Chain Component" {
+    class "Scheduler" {
+         // Event Listeners
+        +listen_for_events()
+        ' +check_stake_status()
+        --
+        // Core functions
+        +match_transactions(user_states: UserState[])
+        +estimate_rewards(user_states: UserState[])
+    }
+}
+
+package "User Interaction" {
+    class "CLI" {
+        +request_initialize_stake(user: Pubkey, amount: u64)
+        +request_shift_stake(user: Pubkey, amount: u64)
+        +request_deactivate_stake(user: Pubkey)
+        +request_estimate_rewards(user: Pubkey)
+    }
+}
+
+CLI --> "Solana Program (Bookkeeping System)" : request_initialize_stake()
+CLI --> "Solana Program (Bookkeeping System)" : request_shift_stake()
+CLI --> "Solana Program (Bookkeeping System)" : request_deactivate_stake()
+
+"Solana Program (Bookkeeping System)" <|- "UserState" : manage stakes
+
+"Scheduler" --> "Solana Program (Bookkeeping System)" : perform_actual_shifting() RPC
+
+"Solana Program (Bookkeeping System)" --> "Scheduler" : onUserStateChanged()
+@enduml
