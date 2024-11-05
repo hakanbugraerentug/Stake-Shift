@@ -5,7 +5,13 @@ import { join } from "path";
 import { readFileSync } from "fs";
 
 import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import {
+  createMint,
+  getOrCreateAssociatedTokenAccount,
+  mintTo,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { assert } from "chai";
 
 describe("simple-staker", () => {
   // Configure the client to use the local cluster.
@@ -15,54 +21,107 @@ describe("simple-staker", () => {
 
   const program = anchor.workspace.SimpleStaker as Program<SimpleStaker>;
 
-  it("Is initialized!", async () => {
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
+  // Add your test here.
+  const WALLET_PATH = join(process.env["HOME"]!, ".config/solana/id.json");
+  console.log("Your wallet Path:", WALLET_PATH);
 
-    const WALLET_PATH = join(process.env["HOME"]!, ".config/solana/id.json");
-    console.log("Your wallet Path:", WALLET_PATH);
+  const admin = Keypair.fromSecretKey(
+    Buffer.from(JSON.parse(readFileSync(WALLET_PATH, { encoding: "utf-8" })))
+  );
+  console.log("admin (in our localhost)", admin.publicKey.toString());
 
-    const admin = Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(readFileSync(WALLET_PATH, { encoding: "utf-8" })))
+  let adminTokenAccount: PublicKey;
+  const user = Keypair.generate();
+  const poolInfo = Keypair.generate();
+  const userInfo = Keypair.generate();
+  const MINT_AMOUNT = 10;
+
+  // Minting Steps
+  // Confirm airdrop occured.
+  it("Airdrops SOL to the payer account", async () => {
+    const airdropSignature = await provider.connection.requestAirdrop(
+      user.publicKey,
+      10 * LAMPORTS_PER_SOL
     );
-    console.log("admin (in our localhost)", admin.publicKey);
+    const latestBlockHash = await provider.connection.getLatestBlockhash();
 
-    const user = Keypair.generate();
-    const poolInfo = Keypair.generate();
-    const userInfo = Keypair.generate();
-
-    let token: Token;
-    let adminTokenAccount: PublicKey;
-    let userTokenAccount: PublicKey;
-
-    // Minting Steps
-    before(async () => {
-      await provider.connection.confirmTransaction(
-        await provider.connection.requestAirdrop(
-          user.publicKey,
-          10 * LAMPORTS_PER_SOL
-        ),
-        "confirmed"
-      );
-
-      // create our first spl token
-      token = await Token.createMint(
-        provider.connection, // Connections
-        admin, // Our localhost admin will be payer
-        admin.publicKey, // mint Authority is admin
-        null, // No freezeAuthority
-        9, // 9 decimal 1_000_000_000
-        TOKEN_PROGRAM_ID // SPL token progra id
-      );
-
-      adminTokenAccount = await token.createAccount(admin.publicKey);
-      userTokenAccount = await token.createAccount(user.publicKey);
-
-      // give our use 10 SPL => 10_000_000_000
-      await token.mintTo(userTokenAccount, admin.publicKey, [admin], 1e10);
-
-      console.log("Minting is successfull");
+    await provider.connection.confirmTransaction({
+      blockhash: latestBlockHash.blockhash,
+      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      signature: airdropSignature,
     });
+
+    let balance = await provider.connection.getBalance(user.publicKey);
+    console.log(`Balance for ${user.publicKey}: ${balance} SOL`);
+
+    assert.strictEqual(
+      balance,
+      10 * LAMPORTS_PER_SOL,
+      "Something is wrong with airdrop amount."
+    );
   });
+
+  it("Creates a new SPL token mint", async () => {
+    // Create a new mint
+    const mint = await createMint(
+      provider.connection, // Connection to Solana
+      provider.wallet.payer as Keypair, // Payer of the transaction fees
+      admin.publicKey, // Authority for minting tokens
+      null, // Freeze authority (optional, here it’s not used)
+      9 // Number of decimal places for the token
+    );
+
+    console.log("Token Mint Address:", mint.toBase58());
+
+    adminTokenAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      admin,
+      mint,
+      admin.publicKey
+    );
+    console.log("Token Account Address:", adminTokenAccount.address.toBase58());
+
+    // Mint tokens to the token account
+    await mintTo(
+      provider.connection,
+      admin,
+      mint,
+      adminTokenAccount.address,
+      admin,
+      MINT_AMOUNT * 10 ** 9 // Amount in smallest units
+    );
+
+    console.log(
+      `Minted ${MINT_AMOUNT} tokens to account: ${adminTokenAccount.address.toBase58()}`
+    );
+  });
+
+  it("Initialize", async () => {
+    let adminTokenAccountBalance =
+      await provider.connection.getTokenAccountBalance(
+        adminTokenAccount.address
+      );
+    console.log("adminTokenAccountBalance: ", adminTokenAccountBalance);
+    assert.strictEqual(
+      adminTokenAccountBalance.value.amount.toString(),
+      "10000000000"
+    );
+  });
+  // });
+  /*
+
+      const tx = await program.methods
+        .initialize(new BN(1), new BN(1e10))
+        .accounts({
+          admin: admin.publicKey,
+          poolInfo: poolInfo.publicKey,
+          stakingToken: token.publicKey,
+          adminStakingWallet: adminTokenAccount,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([admin, poolInfo])
+        .rpc();
+      console.log("Your transaction signature", tx);
+
+      */
 });

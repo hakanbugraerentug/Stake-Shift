@@ -6,7 +6,7 @@ declare_id!("77ym1pwWp4aMpBm9U3QQhJT8W3ntY1CSmehGjaBeVddm");
 pub mod simple_staker {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+    pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
         Ok(())
     }
 }
