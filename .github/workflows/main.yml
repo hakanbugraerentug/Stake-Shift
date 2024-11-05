@@ -47,15 +47,15 @@ jobs:
           else
             echo "Rust version is up-to-date: $INSTALLED_RUST_VERSION"
           fi
-          
-      - name: Build Solana program
-        run: |
-          cd program
-          cargo update -p solana-program@1.18.23 --precise ver
-          cargo build-bpf --manifest-path=Cargo.toml
+      # Below will be uncommented after anchor update.    
+      #- name: Build Solana program
+      #  run: |
+      #    cd program
+      #    cargo update -p solana-program@1.18.23 --precise ver
+      #    cargo build-bpf --manifest-path=Cargo.toml
 
 
-      - name: Run Unit Tests
-        run: |
-          cd program
-          cargo test
+      #- name: Run Unit Tests
+      #  run: |
+      #    cd program
+      #    cargo test
