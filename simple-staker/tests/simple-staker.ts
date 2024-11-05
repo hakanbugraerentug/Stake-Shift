@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
+import { BN, Program } from "@coral-xyz/anchor";
 import { SimpleStaker } from "../target/types/simple_staker";
 import { join } from "path";
 import { readFileSync } from "fs";
@@ -106,22 +106,18 @@ describe("simple-staker", () => {
       adminTokenAccountBalance.value.amount.toString(),
       "10000000000"
     );
+
+    const tx = await program.methods
+      .initialize(new BN(1), new BN(1e10))
+      .accounts({
+        admin: admin.publicKey,
+        poolInfo: poolInfo.publicKey,
+        stakingToken: token.publicKey,
+        adminStakingWallet: adminTokenAccount,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([admin, poolInfo])
+      .rpc();
+    console.log("Your transaction signature", tx);
   });
-  // });
-  /*
-
-      const tx = await program.methods
-        .initialize(new BN(1), new BN(1e10))
-        .accounts({
-          admin: admin.publicKey,
-          poolInfo: poolInfo.publicKey,
-          stakingToken: token.publicKey,
-          adminStakingWallet: adminTokenAccount,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([admin, poolInfo])
-        .rpc();
-      console.log("Your transaction signature", tx);
-
-      */
 });
