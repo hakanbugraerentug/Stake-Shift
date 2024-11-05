@@ -51,6 +51,7 @@ jobs:
       - name: Build Solana program
         run: |
           cd program
+          cargo update -p solana-program@1.18.23 --precise ver
           cargo build-bpf --manifest-path=Cargo.toml
 
 
