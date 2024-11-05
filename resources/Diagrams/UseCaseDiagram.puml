@@ -1,0 +1,33 @@
+@startuml Use-Case Diagram
+start
+:User connects the wallet;
+    split 
+        split 
+            :User requests "Shift Stake" and selects a validator;
+            :The Pubkey is added for tracking and the Event is fired;
+            :Offline agent listens to the Event & Performs the matching of stakes;
+            :Unstake funds from current validator;
+            :Initiate staking transaction;
+            :Create stake account;
+            :Delegate stake to validator;
+
+        split again
+            :User requests "Stake Funds" and selects a validator;
+            if (Is there sufficient balance?) then (yes)
+                :Initiate staking transaction;
+                :Create stake account;
+                :Delegate stake to validator;
+            else (no)
+                :Notify user of insufficient balance;
+            endif
+
+        end split
+
+    
+    :Transfer stake to new validator;
+    split again
+        :User requests "Estimate Rewards";
+        :Estimate rewards and return to the user;
+    end split
+stop
+@enduml
