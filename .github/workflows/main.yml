@@ -36,17 +36,17 @@ jobs:
           override: true
           components: rustfmt
 
-      - name: Verify Rust Version
-        run: |
-          REQUIRED_RUST_VERSION="1.80.0"
-          INSTALLED_RUST_VERSION=$(rustc --version | awk '{print $2}')
-          if [[ "$INSTALLED_RUST_VERSION" < "$REQUIRED_RUST_VERSION" ]]; then
-            echo "Rust version is below required 1.80.0; updating to 1.80.0"
-            rustup install 1.80.0
-            rustup default 1.80.0
-          else
-            echo "Rust version is up-to-date: $INSTALLED_RUST_VERSION"
-          fis
+#      - name: Verify Rust Version
+#        run: |
+#          REQUIRED_RUST_VERSION="1.80.0"
+#          INSTALLED_RUST_VERSION=$(rustc --version | awk '{print $2}')
+#          if [[ "$INSTALLED_RUST_VERSION" < "$REQUIRED_RUST_VERSION" ]]; then
+#            echo "Rust version is below required 1.80.0; updating to 1.80.0"
+#            rustup install 1.80.0
+#            rustup default 1.80.0
+#          else
+#            echo "Rust version is up-to-date: $INSTALLED_RUST_VERSION"
+#          fis
 
       - name: Install Anchor
         run: |
