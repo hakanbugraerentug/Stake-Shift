@@ -8,12 +8,13 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 name = "simple_staker"
 
-[features]
-no-entrypoint = []
-no-idl = []
-no-log-ix-name = []
-cpi = ["no-entrypoint"]
-default = []
-
 [dependencies]
-anchor-lang = "0.27.0"
+subtle = "2.6.1"
+anchor-lang = { git = "https://github.com/coral-xyz/anchor.git", features = ["init-if-needed"]}
+anchor-spl = { git = "https://github.com/coral-xyz/anchor.git"}
+solana-program = "2.1.0"
+
+[features]
+default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+

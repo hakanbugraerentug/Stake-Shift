@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, MintTo, Transfer};
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
+use anchor_spl::token::{TokenAccount};
 
 declare_id!("77ym1pwWp4aMpBm9U3QQhJT8W3ntY1CSmehGjaBeVddm");
 
@@ -8,7 +7,7 @@ declare_id!("77ym1pwWp4aMpBm9U3QQhJT8W3ntY1CSmehGjaBeVddm");
 pub mod simple_staker {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>start_slot: u64, end_slot: u64) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, start_slot: u64, end_slot: u64) -> Result<()> {
         msg!("Instruction: Initialize");
 
         let pool_info = &mut ctx.accounts.pool_info;
@@ -23,4 +22,27 @@ pub mod simple_staker {
 }
 
 #[derive(Accounts)]
-pub struct Initialize {}
+pub struct Initialize<'info> {
+    #[account(init, payer = admin, space = 8 + 32 + 8 + 8)]
+    pub pool_info: Account<'info, PoolInfo>,
+
+    #[account(mut)]
+    pub admin: Signer<'info>,
+
+    #[account(mut, token::authority = admin)]
+    pub staking_token: Account<'info, TokenAccount>,
+
+    #[account(signer)]
+    pub payer: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+
+}
+
+#[account]
+pub struct PoolInfo {
+    pub admin: Pubkey,
+    pub start_slot: u64,
+    pub end_slot: u64,
+    pub token: Pubkey,
+}
