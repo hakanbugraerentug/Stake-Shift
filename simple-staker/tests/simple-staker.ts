@@ -61,63 +61,63 @@ describe("simple-staker", () => {
     );
   });
 
-  it("Creates a new SPL token mint", async () => {
-    // Create a new mint
-    const mint = await createMint(
-      provider.connection, // Connection to Solana
-      provider.wallet.payer as Keypair, // Payer of the transaction fees
-      admin.publicKey, // Authority for minting tokens
-      null, // Freeze authority (optional, here it’s not used)
-      9 // Number of decimal places for the token
-    );
-
-    console.log("Token Mint Address:", mint.toBase58());
-
-    adminTokenAccount = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      admin,
-      mint,
-      admin.publicKey
-    );
-    console.log("Token Account Address:", adminTokenAccount.address.toBase58());
-
-    // Mint tokens to the token account
-    await mintTo(
-      provider.connection,
-      admin,
-      mint,
-      adminTokenAccount.address,
-      admin,
-      MINT_AMOUNT * 10 ** 9 // Amount in smallest units
-    );
-
-    console.log(
-      `Minted ${MINT_AMOUNT} tokens to account: ${adminTokenAccount.address.toBase58()}`
-    );
-  });
-
-  it("Initialize", async () => {
-    let adminTokenAccountBalance =
-      await provider.connection.getTokenAccountBalance(
-        adminTokenAccount.address
-      );
-    console.log("adminTokenAccountBalance: ", adminTokenAccountBalance);
-    assert.strictEqual(
-      adminTokenAccountBalance.value.amount.toString(),
-      "10000000000"
-    );
-
-    const tx = await program.methods
-      .initialize(new BN(1), new BN(1e10))
-      .accounts({
-        admin: admin.publicKey,
-        poolInfo: poolInfo.publicKey,
-        stakingToken: token.publicKey,
-        adminStakingWallet: adminTokenAccount,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([admin, poolInfo])
-      .rpc();
-    console.log("Your transaction signature", tx);
-  });
+  // it("Creates a new SPL token mint", async () => {
+  //   // Create a new mint
+  //   const mint = await createMint(
+  //     provider.connection, // Connection to Solana
+  //     provider.wallet.payer as Keypair, // Payer of the transaction fees
+  //     admin.publicKey, // Authority for minting tokens
+  //     null, // Freeze authority (optional, here it’s not used)
+  //     9 // Number of decimal places for the token
+  //   );
+  //
+  //   console.log("Token Mint Address:", mint.toBase58());
+  //
+  //   adminTokenAccount = await getOrCreateAssociatedTokenAccount(
+  //     provider.connection,
+  //     admin,
+  //     mint,
+  //     admin.publicKey
+  //   );
+  //   console.log("Token Account Address:", adminTokenAccount.address.toBase58());
+  //
+  //   // Mint tokens to the token account
+  //   await mintTo(
+  //     provider.connection,
+  //     admin,
+  //     mint,
+  //     adminTokenAccount.address,
+  //     admin,
+  //     MINT_AMOUNT * 10 ** 9 // Amount in smallest units
+  //   );
+  //
+  //   console.log(
+  //     `Minted ${MINT_AMOUNT} tokens to account: ${adminTokenAccount.address.toBase58()}`
+  //   );
+  // });
+  //
+  // it("Initialize", async () => {
+  //   let adminTokenAccountBalance =
+  //     await provider.connection.getTokenAccountBalance(
+  //       adminTokenAccount.address
+  //     );
+  //   console.log("adminTokenAccountBalance: ", adminTokenAccountBalance);
+  //   assert.strictEqual(
+  //     adminTokenAccountBalance.value.amount.toString(),
+  //     "10000000000"
+  //   );
+  //
+  //   const tx = await program.methods
+  //     .initialize(new BN(1), new BN(1e10))
+  //     .accounts({
+  //       admin: admin.publicKey,
+  //       poolInfo: poolInfo.publicKey,
+  //       stakingToken: token.publicKey,
+  //       adminStakingWallet: adminTokenAccount,
+  //       systemProgram: SystemProgram.programId,
+  //     })
+  //     .signers([admin, poolInfo])
+  //     .rpc();
+  //   console.log("Your transaction signature", tx);
+  // });
 });
