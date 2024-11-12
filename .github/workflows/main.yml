@@ -54,7 +54,6 @@ jobs:
 
       - name: Run Anchor tests
         run: |
-          cd programs/your_program simple-staker
           anchor test --skip-deploy
 
       # Below will be uncommented after anchor update.    
