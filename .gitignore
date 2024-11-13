@@ -1,7 +1,7 @@
 ## DEVELOPER_DEFINED
-
+agave_stake/
 test-ledger/
-
+hakan.json
 ## BELOW THERE IS STANDART GITIGNORE FOR PYTHON, RUST and NODEJS
 
 # Created by https://www.toptal.com/developers/gitignore/api/rust,python
