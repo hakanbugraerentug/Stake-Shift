@@ -1,12 +1,12 @@
 [package]
-name = "simple-staker"
+name = "staking-program"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "simple_staker"
+name = "staking_program"
 
 [features]
 no-entrypoint = []
@@ -16,4 +16,6 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.27.0"
+anchor-lang = {version ="0.28.0", features=["init-if-needed"]} 
+anchor-spl = "=0.28.0"
+solana-program = "=1.16.0"
