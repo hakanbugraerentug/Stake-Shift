@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "workspaces": [
+    "program",
+    "frontend"
+  ],
+  "name": "solana-stake-shift",
+  "version": "1.0.0"
+}
