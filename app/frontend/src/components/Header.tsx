@@ -4,7 +4,11 @@ import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToken } from '../contexts/TokenContext'
 
-export default function Header() {
+interface HeaderProps {
+  isAdmin?: boolean;
+}
+
+export default function Header({ isAdmin = false }: HeaderProps) {
   const [isDark, setIsDark] = useState(false);
   const { balance } = useToken();
 

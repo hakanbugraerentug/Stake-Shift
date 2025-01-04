@@ -1,20 +1,34 @@
+import React from 'react'
+import { Buffer } from 'buffer'
+globalThis.Buffer = Buffer
+
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AdminLayout } from './layouts/AdminLayout'
+import { ClientLayout } from './layouts/ClientLayout'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { AdminDashboard } from './pages/admin/Dashboard'
 import { StakeShiftInterface } from './components/stake-shift-interface'
-import { TokenPurchase } from './components/token-purchase'
-import { TransactionDashboard } from './components/transaction-dashboard'
-import Header from './components/Header'
+import { TransactionHistory } from './components/transaction-history'
 
 function App() {
+  const { publicKey } = useWallet()
+  const isAdmin = true
+
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-dark-bg">
-      <Header />
-      <div className="pt-20 p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <TokenPurchase />
-          <TransactionDashboard />
-          <StakeShiftInterface />
-        </div>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        {/* Admin Routes */}
+        <Route path="/admin" element={isAdmin ? <AdminLayout /> : <Navigate to="/" />}>
+          <Route index element={<AdminDashboard />} />
+        </Route>
+
+        {/* Client Routes */}
+        <Route path="/" element={<ClientLayout />}>
+          <Route index element={<StakeShiftInterface />} />
+          <Route path="history" element={<TransactionHistory />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
 

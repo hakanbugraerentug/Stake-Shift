@@ -4,19 +4,24 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { parseTransferFromAccountInfo, findDirectCycles, findTriangleCycles, updateStats } from '../utils/cycle-detection';
 import { mockTransfers } from '../utils/mock-data';
-import { Tooltip } from './ui/tooltip';
 
-export function TransactionDashboard() {
-  const [transfers, setTransfers] = useState<StakeTransfer[]>(mockTransfers);
-  const [cycles, setCycles] = useState<CycleInfo[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
+export function TransactionDashboard({ testData }: { testData?: any }) {
+  const [transfers, setTransfers] = useState<StakeTransfer[]>(testData?.recentTransactions || mockTransfers);
+
+  const stats = testData?.stats || {
     totalTransactions: 0,
-    directCycles: 0,
-    triangleCycles: 0,
+    totalValue: 0,
+    averageAmount: 0,
     potentialSavings: 0
-  });
+  };
 
   const { connection } = useConnection();
+
+  useEffect(() => {
+    if (testData) {
+      setTransfers(testData.recentTransactions);
+    }
+  }, [testData]);
 
   useEffect(() => {
     const subscribeToProgram = async () => {
@@ -29,7 +34,6 @@ export function TransactionDashboard() {
           const newTransfer = parseTransferFromAccountInfo(accountInfo);
           if (newTransfer) {
             setTransfers(prev => [...prev, newTransfer]);
-            analyzeCycles([...transfers, newTransfer]);
           }
         }
       );
@@ -38,70 +42,35 @@ export function TransactionDashboard() {
     subscribeToProgram();
   }, [connection]);
 
-  useEffect(() => {
-    analyzeCycles(transfers);
-  }, [transfers]);
-
-  const analyzeCycles = (currentTransfers: StakeTransfer[]) => {
-    // Similar to the offchain.ts logic
-    const directCycles = findDirectCycles(currentTransfers);
-    const triangleCycles = findTriangleCycles(currentTransfers);
-    
-    setCycles([...directCycles, ...triangleCycles]);
-    setStats(updateStats(directCycles, triangleCycles));
-  };
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="p-4 bg-white dark:bg-dark-card rounded-lg shadow">
-        <h2 className="text-lg font-semibold mb-4 dark:text-dark-text">Transaction Statistics</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <StatCard 
-            title="Total Transactions" 
-            value={stats.totalTransactions} 
-          />
-          <StatCard 
-            title="Direct Cycles" 
-            value={stats.directCycles}
-            className="text-blue-600"
-          />
-          <StatCard 
-            title="Triangle Cycles" 
-            value={stats.triangleCycles}
-            className="text-green-600"
-          />
-          <Tooltip
-            content={
-              <div className="max-w-xs">
-                <p>Amount of SOL that could be saved by optimizing stake movements.</p>
-                <p className="mt-2">Example:</p>
-                <ul className="list-disc pl-4 mt-1 space-y-1">
-                  <li>A → B: 100 SOL</li>
-                  <li>B → A: 150 SOL</li>
-                  <li>Can be optimized to: B → A: 50 SOL</li>
-                  <li>Saving: 100 SOL in movements</li>
-                </ul>
-              </div>
-            }
-          >
-            <div>
-              <StatCard 
-                title="Potential Savings" 
-                value={`${stats.potentialSavings.toFixed(2)} SOL`}
-                className="text-purple-600"
-              />
-            </div>
-          </Tooltip>
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div>
+        <StatCard 
+          title="Total Transactions" 
+          value={stats.totalTransactions.toString()}
+          className="text-blue-600"
+        />
       </div>
-
-      <div className="p-4 bg-white dark:bg-dark-card rounded-lg shadow">
-        <h2 className="text-lg font-semibold mb-4 dark:text-dark-text">Recent Cycles</h2>
-        <div className="space-y-4">
-          {cycles.slice(0, 5).map((cycle, index) => (
-            <CycleCard key={index} cycle={cycle} />
-          ))}
-        </div>
+      <div>
+        <StatCard 
+          title="Total Value" 
+          value={`${stats.totalValue.toFixed(2)} SOL`}
+          className="text-green-600"
+        />
+      </div>
+      <div>
+        <StatCard 
+          title="Average Amount" 
+          value={`${stats.averageAmount.toFixed(2)} SOL`}
+          className="text-orange-600"
+        />
+      </div>
+      <div>
+        <StatCard 
+          title="Potential Savings" 
+          value={`${stats.potentialSavings.toFixed(2)} SOL`}
+          className="text-purple-600"
+        />
       </div>
     </div>
   );
@@ -122,30 +91,29 @@ function StatCard({ title, value, className = '' }: StatCardProps) {
   );
 }
 
-function CycleCard({ cycle }: { cycle: CycleInfo }) {
-  return (
-    <div className="p-3 rounded-lg bg-gray-50 dark:bg-dark-hover">
-      <div className="flex justify-between items-center">
-        <span className={`text-sm font-medium ${
-          cycle.type === 'direct' ? 'text-blue-600' : 'text-green-600'
-        }`}>
-          {cycle.type === 'direct' ? 'Direct Cycle' : 'Triangle Cycle'}
-        </span>
-        <span className="text-xs text-gray-500">
-          {new Date(cycle.timestamp).toLocaleString()}
-        </span>
-      </div>
-      <div className="mt-2 text-sm">
-        {cycle.nodes.map((node, i) => (
-          <span key={i}>
-            {node.slice(0, 4)}...{node.slice(-4)}
-            {i < cycle.nodes.length - 1 ? ' → ' : ''}
-          </span>
-        ))}
-      </div>
-      <div className="mt-1 text-xs text-gray-500">
-        Total Flow: {cycle.amounts.reduce((a, b) => Number(a) + Number(b), 0)} SOL
-      </div>
-    </div>
-  );
-} 
+// function CycleCard({ cycle }: { cycle: CycleInfo }) {
+//   return (
+//     <div className="p-3 rounded-lg bg-gray-50 dark:bg-dark-hover">
+//       <div className="flex justify-between items-center">
+//         <span className={`text-sm font-medium ${
+//           cycle.type === 'direct' ? 'text-blue-600' : 'text-green-600'
+//         }`}>
+//           {cycle.type === 'direct' ? 'Direct Cycle' : 'Triangle Cycle'}
+//         </span>
+//         <span className="text-xs text-gray-500">
+//           {new Date(cycle.timestamp).toLocaleString()}
+//         </span>
+//       </div>
+//       <div className="mt-2 text-sm">
+//         {cycle.nodes.map((node, i) => (
+//           <span key={i}>
+//             {node.slice(0, 4)}...{node.slice(-4)}
+//             {i < cycle.nodes.length - 1 ? ' → ' : ''}
+//           </span>
+//         ))}
+//       </div>
+//       <div className="mt-1 text-xs text-gray-500">
+//         Total Flow: {cycle.amounts.reduce((a, b) => Number(a) + Number(b), 0)} SOL
+//       </div>
+//     </div>
+//   );

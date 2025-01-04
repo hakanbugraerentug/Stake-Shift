@@ -1,28 +1,27 @@
-import * as React from 'react';
-import * as TooltipPrimitive from '@radix-ui/react-tooltip';
+import React, { useState } from 'react';
 
 interface TooltipProps {
-  children: React.ReactNode;
   content: React.ReactNode;
+  children: React.ReactNode;
 }
 
-export function Tooltip({ children, content }: TooltipProps) {
+export function Tooltip({ content, children }: TooltipProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
   return (
-    <TooltipPrimitive.Provider>
-      <TooltipPrimitive.Root>
-        <TooltipPrimitive.Trigger asChild>
-          {children}
-        </TooltipPrimitive.Trigger>
-        <TooltipPrimitive.Portal>
-          <TooltipPrimitive.Content
-            className="bg-white dark:bg-dark-card p-3 rounded-lg shadow-lg text-sm dark:text-dark-text border border-gray-200 dark:border-dark-border"
-            sideOffset={5}
-          >
-            {content}
-            <TooltipPrimitive.Arrow className="fill-white dark:fill-dark-card" />
-          </TooltipPrimitive.Content>
-        </TooltipPrimitive.Portal>
-      </TooltipPrimitive.Root>
-    </TooltipPrimitive.Provider>
+    <div className="relative inline-block">
+      <div
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+      >
+        {children}
+      </div>
+      {isVisible && (
+        <div className="absolute z-50 px-2 py-1 text-xs text-white bg-black rounded -top-8 left-1/2 transform -translate-x-1/2">
+          {content}
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-black" />
+        </div>
+      )}
+    </div>
   );
 } 
