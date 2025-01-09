@@ -70,3 +70,8 @@ npm install -D @types/node @types/bn.js
 solana config get
 solana balance
 ``` 
+![image](https://github.com/user-attachments/assets/3446edfe-d85a-491c-acbd-96c30961b6be)
+![image](https://github.com/user-attachments/assets/8a3a6cf6-666a-460b-8c59-9d11d6eadade)
+![image](https://github.com/user-attachments/assets/1965e043-3a8e-4909-9df1-282657f6ace3)
+
+
