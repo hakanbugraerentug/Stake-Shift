@@ -21,10 +21,9 @@ const TokenContext = createContext<TokenContextType>({
 export function TokenProvider({ children }: { children: React.ReactNode }) {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
-  const [balance, setBalance] = useState<TokenBalance>({ 
-    amount: 0, 
-    symbol: 'SHIFT', 
-    decimals: 9 
+  const [balance, setBalance] = useState({
+    amount: 50.00, // Initial balance of 50 SHIFT
+    symbol: 'SHIFT'
   });
   
   const [price] = useState<TokenPrice>({ 

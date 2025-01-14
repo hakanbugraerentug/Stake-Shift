@@ -33,6 +33,10 @@ export default function Header({ isAdmin = false }: HeaderProps) {
         </div>
       </div>
       <div className="flex items-center gap-4">
+      <div className="text-sm dark:text-dark-text">
+          <span className="font-medium">{balance.amount.toFixed(2)}</span>
+          <span className="ml-1 text-gray-500">{balance.symbol}</span>
+        </div>
         <button
           onClick={toggleDarkMode}
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-hover"
@@ -40,10 +44,7 @@ export default function Header({ isAdmin = false }: HeaderProps) {
           {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </button>
         <WalletMultiButton />
-        <div className="text-sm dark:text-dark-text">
-          <span className="font-medium">{balance.amount.toFixed(2)}</span>
-          <span className="ml-1 text-gray-500">{balance.symbol}</span>
-        </div>
+        
       </div>
     </header>
   );

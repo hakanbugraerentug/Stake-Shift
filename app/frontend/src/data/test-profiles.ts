@@ -70,14 +70,37 @@ export const testProfiles: Record<string, TestProfile> = {
         timestamp: Date.now() - 75600000,
         status: 'confirmed',
         signature: '56789...'
+      },
+      {
+        from: "Validator4",
+        to: "Validator2",
+        amount: 12.00,
+        timestamp: Date.now() - 72000000,
+        status: 'confirmed',
+        signature: '67890...'
+      },
+      {
+        from: "Validator2",
+        to: "Validator4",
+        amount: 14.00,
+        timestamp: Date.now() - 68400000,
+        status: 'confirmed',
+        signature: '78901...'
       }
     ],
     cycles: {
-      direct: [{
-        addresses: ["Validator1", "Validator2"],
-        amounts: [10.00, 15.00],
-        timestamp: Date.now() - 82800000
-      }],
+      direct: [
+        {
+          addresses: ["Validator1", "Validator2"],
+          amounts: [10.00, 15.00],
+          timestamp: Date.now() - 82800000
+        },
+        {
+          addresses: ["Validator2", "Validator4"],
+          amounts: [14.00, 12.00],
+          timestamp: Date.now() - 68400000
+        }
+      ],
       triangle: [{
         addresses: ["Validator1", "Validator3", "Validator2"],
         amounts: [5.00, 8.00, 15.00],
@@ -85,9 +108,9 @@ export const testProfiles: Record<string, TestProfile> = {
       }]
     },
     stats: {
-      totalTransactions: 4,
-      totalValue: 38.00,
-      averageAmount: 9.50,
+      totalTransactions: 6,
+      totalValue: 64.00,
+      averageAmount: 10.67,
       lastUpdated: Date.now()
     }
   },

@@ -1,106 +1,134 @@
-import { useState } from 'react'
-import { validators } from '../data/validators';
-import { cn } from "../lib/utils";
+import * as React from 'react';
+import { useState } from 'react';
+import { AutoStake } from './auto-stake';
+import * as ValidatorData from '../data/validators';
+import { Button } from './ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useUser } from '../contexts/UserContext';
 
-const ITEMS_PER_PAGE = 10;
+const { validators, userStakes } = ValidatorData;
+const ITEMS_PER_PAGE = 4;
 
-export default function ValidatorsTable() {
+export function ValidatorsTable({ isAdmin = false }) {
+  const { user } = useUser();
   const [currentPage, setCurrentPage] = useState(1);
-  
   const totalPages = Math.ceil(validators.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentValidators = validators.slice(startIndex, endIndex);
+  
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentValidators = validators.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Now you can access user data
+  const userStakes = user?.stakes || [];
+  
+  // Calculate total staked amount with debugging
+  const totalStaked = userStakes.reduce((sum, stake) => {
+    const amount = parseFloat(stake.amount || '0');
+    console.log(`Stake amount for ${stake.validator}:`, amount);
+    return sum + amount;
+  }, 0);
+  
+  console.log('Total staked amount:', totalStaked);
+  console.log('Current user stakes:', userStakes);
 
   return (
-    <div className="overflow-x-auto validators-table">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-        <thead className="bg-gray-50 dark:bg-dark-hover">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Validator
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Vote Account
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Stake
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Commission
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              APY
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Score
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-          {currentValidators.map((validator, idx) => (
-            <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-dark-hover">
-              <td className="px-6 py-4 whitespace-nowrap dark:text-dark-text">
-                <div className="flex items-center">
-                  {validator.icon ? (
-                    <img 
-                      src={validator.icon} 
-                      alt={`${validator.validator} logo`}
-                      className={cn(
-                        "w-6 h-6 rounded-full mr-2",
-                        "bg-gray-200 dark:bg-gray-700",
-                        "object-contain"
-                      )}
-                      onError={(e) => {
-                        // Fallback if image fails to load
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full mr-2 bg-gray-200 dark:bg-gray-700" />
-                  )}
-                  {validator.validator}
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap font-mono text-sm dark:text-dark-text">
-                {validator.voteAccount}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap dark:text-dark-text">
-                {validator.stake}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap dark:text-dark-text">
-                {validator.commission}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap dark:text-dark-text">
-                {validator.apy}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap dark:text-dark-text">
-                {validator.score}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-8">
+      {/* My Current Stakes Table - Only show in client view */}
+      {!isAdmin && userStakes && userStakes.length > 0 && (
+        <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-dark-border flex justify-between items-center">
+            <h3 className="font-medium dark:text-dark-text">My Current Stakes</h3>
+            <div className="text-sm text-gray-500">
+              Total Staked: <span className="font-medium">{totalStaked.toFixed(2)} SHIFT</span>
+            </div>
+          </div>
+          <div className="p-4">
+            <table className="w-full">
+              <thead>
+                <tr className="text-sm text-gray-500 dark:text-gray-400">
+                  <th className="text-left pb-2">Validator</th>
+                  <th className="text-left pb-2">Score</th>
+                  <th className="text-right pb-2">Commission</th>
+                  <th className="text-right pb-2">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {userStakes.map((stake) => (
+                  <tr key={stake.voteAccount}>
+                    <td className="py-2">{stake.validator}</td>
+                    <td className="py-2">{stake.score}</td>
+                    <td className="py-2 text-right">{stake.commission}</td>
+                    <td className="py-2 text-right">{stake.amount} SHIFT</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
-      {/* Pagination Controls */}
-      <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-dark-border">
-        <button
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-          className="px-3 py-1 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed dark:border-dark-border dark:text-dark-text"
-        >
-          Previous
-        </button>
-        <span className="text-sm text-gray-700 dark:text-dark-text">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed dark:border-dark-border dark:text-dark-text"
-        >
-          Next
-        </button>
+      {/* Available Validators Table */}
+      <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+        <div className="p-4 border-b border-gray-200 dark:border-dark-border">
+          <h3 className="font-medium dark:text-dark-text">Available Validators</h3>
+        </div>
+        <div className="p-4">
+          <table className="w-full">
+            <thead>
+              <tr className="text-sm text-gray-500 dark:text-gray-400">
+                <th className="text-left pb-2">Validator</th>
+                <th className="text-left pb-2">Score</th>
+                <th className="text-right pb-2">Commission</th>
+                {!isAdmin && <th className="text-right pb-2">Action</th>}
+              </tr>
+            </thead>
+            <tbody className="dark:text-gray-300">
+              {currentValidators.map((validator) => (
+                <tr key={validator.voteAccount}>
+                  <td className="py-2 dark:text-gray-300">{validator.validator}</td>
+                  <td className="py-2 dark:text-gray-300">{validator.score}</td>
+                  <td className="py-2 text-right dark:text-gray-300">{validator.commission}</td>
+                  {!isAdmin && (
+                    <td className="py-2 text-right">
+                      <AutoStake validator={validator.validator} />
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-center gap-2 border-t border-gray-200 dark:border-gray-700 pt-4">
+              <Button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-2 px-4 py-2 text-sm"
+                variant="outline"
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </Button>
+              
+              <div className="flex items-center px-4">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {currentPage} / {totalPages}
+                </span>
+              </div>
+
+              <Button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-2 px-4 py-2 text-sm"
+                variant="outline"
+              >
+                Next
+                <ChevronRight size={16} />
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

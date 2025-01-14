@@ -21,6 +21,18 @@ export const validators: Validator[] = [
     score: "9.5",
     commission: "7%",
   },
+  {
+    validator: 'Figment',
+    voteAccount: 'FigmentNetworks1234567890123456789012345678901',
+    score: "9.6",
+    commission: "8%",
+  },
+  {
+    validator: 'P2P Validator',
+    voteAccount: 'P2PValidator12345678901234567890123456789012',
+    score: "9.7",
+    commission: "6.5%",
+  }
 ];
 
 export const userStakes: Validator[] = [
@@ -30,12 +42,5 @@ export const userStakes: Validator[] = [
     score: "9.8",
     commission: "8%",
     amount: "0.1",
-  },
-  {
-    validator: 'Chorus One',
-    voteAccount: 'CHoJVQo7NXUYzHeWNM3TfDhNiXEUdXhGzSx4RYsCZT4U',
-    score: "9.5",
-    commission: "7%",
-    amount: "0.05",
-  },
+  }
 ]; 

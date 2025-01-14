@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PubkeyDisplay } from './PubkeyDisplay';
+import { matchingService } from '../services/matching-service';
 
 interface TestResultsProps {
   results: {
@@ -52,14 +53,27 @@ export function TestResultsView({ results }: TestResultsProps) {
   };
 
   function CycleVisualizer({ cycle, type }: { cycle: any, type: 'direct' | 'triangle' }) {
-    // Add safety check at the start
+    // Add safety checks for cycle structure
     if (!cycle?.addresses?.length || !cycle?.amounts?.length) {
+      return null;
+    }
+
+    // Validate cycle type matches number of nodes
+    if ((type === 'direct' && cycle.addresses.length !== 2) || 
+        (type === 'triangle' && cycle.addresses.length !== 3)) {
+      console.error('Invalid cycle type or number of nodes:', { type, cycle });
       return null;
     }
 
     const bgColor = type === 'direct' ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-green-50 dark:bg-green-900/20';
     const textColor = type === 'direct' ? 'text-blue-600 dark:text-blue-400' : 'text-green-600 dark:text-green-400';
-    const isNew = cycle.timestamp > Date.now() - 5000;
+
+    // Get the most recent timestamp from the cycle or its transactions
+    const cycleTimestamp = Array.isArray(cycle.transactions) 
+      ? Math.max(...cycle.transactions.map(t => t.timestamp))
+      : cycle.timestamp;
+
+    const isNew = Date.now() - cycleTimestamp < 5000;
 
     return (
       <motion.div
@@ -93,55 +107,17 @@ export function TestResultsView({ results }: TestResultsProps) {
             Total Flow: {cycle.amounts?.reduce((a: number, b: number) => a + b, 0)} SOL
           </div>
           <div className="text-right">
-            Savings: {Math.min(...(cycle.amounts || []))} SOL
+            Optimization: {Math.min(...(cycle.amounts || []))} SOL
           </div>
         </div>
       </motion.div>
     );
   }
 
-  function getMatchedAmount(tx: any, directCycles: any[], triangleCycles: any[]) {
-    let matchedAmount = 0;
-    
-    // Check direct cycles (A->B, B->A)
-    for (const cycle of directCycles) {
-      if (!cycle?.addresses?.length || !cycle?.amounts?.length) continue;
-
-      // Only match if both transactions in the cycle exist
-      const firstTx = cycle.transactions?.[0];
-      const secondTx = cycle.transactions?.[1];
-      
-      if (firstTx && secondTx) {
-        // Check if current tx is part of this cycle
-        if ((tx.from === firstTx.from && tx.to === firstTx.to) ||
-            (tx.from === secondTx.from && tx.to === secondTx.to)) {
-          matchedAmount = tx.amount;
-          console.log('Found match in direct cycle:', { cycle, tx });
-          return matchedAmount;
-        }
-      }
-    }
-
-    // Check triangle cycles (A->B->C->A)
-    for (const cycle of triangleCycles) {
-      if (!cycle?.addresses?.length || !cycle?.amounts?.length) continue;
-
-      // Only match if all three transactions in the cycle exist
-      const cycleTxs = cycle.transactions;
-      if (cycleTxs?.length === 3) {
-        // Check if current tx is part of this cycle
-        for (const cycleTx of cycleTxs) {
-          if (tx.from === cycleTx.from && tx.to === cycleTx.to) {
-            matchedAmount = tx.amount;
-            console.log('Found match in triangle cycle:', { cycle, tx });
-            return matchedAmount;
-          }
-        }
-      }
-    }
-
-    return matchedAmount;
-  }
+  useEffect(() => {
+    // Update matching service when transactions change
+    matchingService.updateTransactions(recentTransactions);
+  }, [recentTransactions]);
 
   return (
     <motion.div 
@@ -202,7 +178,7 @@ export function TestResultsView({ results }: TestResultsProps) {
           }}
           className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow"
         >
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Potential Savings</h3>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Potential Optimization</h3>
           <p className="mt-2 text-2xl font-semibold dark:text-white">
             {stats.potentialSavings.toFixed(2)} SOL
           </p>
@@ -246,13 +222,14 @@ export function TestResultsView({ results }: TestResultsProps) {
                 <th className="text-left pb-2">To</th>
                 <th className="text-right pb-2">Amount</th>
                 <th className="text-right pb-2">Matched</th>
+                <th className="text-right pb-2">Left</th>
                 <th className="text-right pb-2">Time</th>
               </tr>
             </thead>
             <tbody className="dark:text-gray-300">
               <AnimatePresence>
                 {recentTransactions.map((tx, i) => {
-                  const matchedAmount = getMatchedAmount(tx, directCycles, triangleCycles);
+                  const { matchedAmount, remainingAmount } = matchingService.getMatchResult(tx);
                   return (
                     <motion.tr 
                       key={i}
@@ -266,6 +243,9 @@ export function TestResultsView({ results }: TestResultsProps) {
                       <td className="py-2 text-right">{tx.amount.toFixed(2)} SOL</td>
                       <td className={`py-2 text-right ${matchedAmount > 0 ? 'text-green-500' : 'text-gray-400'}`}>
                         {matchedAmount > 0 ? `${matchedAmount.toFixed(2)} SOL` : '-'}
+                      </td>
+                      <td className={`py-2 text-right ${remainingAmount > 0 ? 'text-orange-500' : 'text-gray-400'}`}>
+                        {remainingAmount > 0 ? `${remainingAmount.toFixed(2)} SOL` : '-'}
                       </td>
                       <td className="py-2 text-right text-gray-500 dark:text-gray-400">
                         {safeFormat(tx.timestamp)}
@@ -291,22 +271,20 @@ export function TestResultsView({ results }: TestResultsProps) {
         </div>
         <div className="p-4 space-y-4">
           <AnimatePresence>
-            {directCycles.map((cycle, i) => (
-              cycle && cycle.addresses && cycle.amounts ? (
-                <CycleVisualizer 
-                  key={`direct-${i}`}
-                  cycle={cycle}
-                  type="direct"
-                />
-              ) : null
-            ))}
-            {triangleCycles.map((cycle, i) => (
-              <CycleVisualizer 
-                key={`triangle-${i}`}
-                cycle={cycle}
-                type="triangle"
-              />
-            ))}
+            {[...directCycles, ...triangleCycles]
+              .sort((a, b) => b.timestamp - a.timestamp)
+              .map((cycle, i) => {
+                // Determine the actual cycle type based on the cycle object
+                const actualType = cycle.type || (cycle.addresses?.length === 3 ? 'triangle' : 'direct');
+                
+                return cycle && cycle.addresses && cycle.amounts ? (
+                  <CycleVisualizer 
+                    key={`${actualType}-${i}`}
+                    cycle={cycle}
+                    type={actualType as 'direct' | 'triangle'}
+                  />
+                ) : null;
+              })}
           </AnimatePresence>
         </div>
       </motion.div>
